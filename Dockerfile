@@ -1,5 +1,5 @@
-# Use Node.js 24 Alpine for better Cairo support
-FROM node:24-alpine
+# Use Node.js 20 LTS Alpine for better compatibility
+FROM node:20-alpine
 
 # Install system dependencies for canvas
 RUN apk add --no-cache \
@@ -18,6 +18,10 @@ RUN apk add --no-cache \
 
 # Set working directory
 WORKDIR /app
+
+# Set environment variables for Cairo/Pango
+ENV PANGOCAIRO_BACKEND=fontconfig
+ENV FONTCONFIG_PATH=/etc/fonts
 
 # Copy package files
 COPY package*.json ./
