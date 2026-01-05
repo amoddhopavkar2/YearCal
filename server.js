@@ -264,6 +264,40 @@ function generateCalendarImage(birthDate, currentDate, lifeExpectancy, themeName
   return canvas.toBuffer('image/png');
 }
 
+// Test endpoint for debugging canvas
+app.get('/test-canvas', (req, res) => {
+  try {
+    const canvas = createCanvas(500, 500);
+    const ctx = canvas.getContext('2d');
+
+    // Fill background with white
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, 500, 500);
+
+    // Draw a red rectangle
+    ctx.fillStyle = '#FF0000';
+    ctx.fillRect(50, 50, 100, 100);
+
+    // Draw a blue circle
+    ctx.beginPath();
+    ctx.arc(250, 250, 50, 0, Math.PI * 2);
+    ctx.fillStyle = '#0000FF';
+    ctx.fill();
+
+    // Draw some green text
+    ctx.fillStyle = '#00FF00';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('Test Canvas', 150, 400);
+
+    const buffer = canvas.toBuffer('image/png');
+    res.set('Content-Type', 'image/png');
+    res.send(buffer);
+  } catch (error) {
+    console.error('Canvas test error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Health check / landing page
 app.get('/', (req, res) => {
   const html = `
