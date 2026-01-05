@@ -62,9 +62,10 @@ Generate a life calendar PNG image.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `birthDate` | string | Yes | Your birth date (YYYY-MM-DD) |
-| `currentDate` | string | Yes | Current date (YYYY-MM-DD) |
 | `lifeExpectancy` | number | No | Expected lifespan in years (default: 80) |
 | `theme` | string | No | "dark" or "light" (default: "dark") |
+
+**Note:** The current date is automatically set to today's date by the API.
 
 **Response:**
 
@@ -81,7 +82,6 @@ curl -X POST https://your-app.up.railway.app/api/generate-calendar \
   -H "Content-Type: application/json" \
   -d '{
     "birthDate": "1990-05-15",
-    "currentDate": "2024-01-15",
     "lifeExpectancy": 80,
     "theme": "dark"
   }' \
@@ -92,7 +92,6 @@ curl -X POST https://your-app.up.railway.app/api/generate-calendar \
   -H "Content-Type: application/json" \
   -d '{
     "birthDate": "1985-12-01",
-    "currentDate": "2024-01-15",
     "lifeExpectancy": 90,
     "theme": "light"
   }' \
@@ -109,7 +108,6 @@ const response = await fetch('https://your-app.up.railway.app/api/generate-calen
   },
   body: JSON.stringify({
     birthDate: '1990-05-15',
-    currentDate: new Date().toISOString().split('T')[0],
     lifeExpectancy: 80,
     theme: 'dark',
   }),
@@ -133,33 +131,25 @@ Create an iOS Shortcut to automatically generate and set your life calendar as y
 
 3. **Add Actions**
 
-   **Action 1: Get Current Date**
-   - Add "Date" action
-   - Set to "Current Date"
-   - Add "Format Date" action
-   - Format: Custom → `yyyy-MM-dd`
-   - Save to variable: `currentDate`
-
-   **Action 2: Create JSON Dictionary**
+   **Action 1: Create JSON Dictionary**
    - Add "Dictionary" action
    - Add keys:
      - `birthDate`: Your birth date (e.g., "1990-05-15")
-     - `currentDate`: Variable `currentDate`
      - `lifeExpectancy`: 80 (or your preference)
      - `theme`: "dark" or "light"
 
-   **Action 3: Get Contents of URL**
+   **Action 2: Get Contents of URL**
    - Add "Get Contents of URL" action
    - URL: `https://your-app.up.railway.app/api/generate-calendar`
    - Method: POST
    - Headers: `Content-Type` = `application/json`
    - Request Body: JSON → Dictionary from previous step
 
-   **Action 4: Save to Photos**
+   **Action 3: Save to Photos**
    - Add "Save to Photo Album" action
    - Input: Contents of URL result
 
-   **Action 5 (Optional): Set Wallpaper**
+   **Action 4 (Optional): Set Wallpaper**
    - Add "Set Wallpaper" action
    - Photo: Saved photo
    - Screen: Lock Screen
@@ -170,24 +160,23 @@ Create an iOS Shortcut to automatically generate and set your life calendar as y
    - Run daily at midnight
    - Run your Life Calendar shortcut
 
-### Example Shortcut JSON
+### Example Shortcut Flow
 
 ```
-1. Date (Current Date)
-2. Format Date (yyyy-MM-dd) → currentDate
-3. Dictionary:
+1. Dictionary:
    - birthDate: "1990-05-15"
-   - currentDate: currentDate
    - lifeExpectancy: 80
    - theme: "dark"
-4. Get Contents of URL
+2. Get Contents of URL
    - URL: https://your-app.up.railway.app/api/generate-calendar
    - Method: POST
    - Headers: Content-Type: application/json
    - Body: Dictionary
-5. Save to Photo Album
-6. Set Wallpaper (Lock Screen)
+3. Save to Photo Album
+4. Set Wallpaper (Lock Screen)
 ```
+
+The API automatically uses today's date, so you don't need to format or pass the current date.
 
 ## Local Development
 
@@ -229,7 +218,7 @@ The server will start at `http://localhost:3000`
 ```bash
 curl -X POST http://localhost:3000/api/generate-calendar \
   -H "Content-Type: application/json" \
-  -d '{"birthDate":"1990-05-15","currentDate":"2024-01-15"}' \
+  -d '{"birthDate":"1990-05-15","lifeExpectancy":80,"theme":"dark"}' \
   --output test-calendar.png
 ```
 
