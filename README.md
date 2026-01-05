@@ -157,7 +157,7 @@ Create an iOS Shortcut to automatically generate and set your life calendar as y
 4. **Automate (Optional)**
    - Go to Automation tab
    - Create "Time of Day" automation
-   - Run daily at midnight
+   - Set to run weekly on Monday at 2:00 AM
    - Run your Life Calendar shortcut
 
 ### Example Shortcut Flow
