@@ -58,52 +58,28 @@ const THEMES = {
 function validateInput(body) {
   const errors = [];
 
-  if (!body.birthDate) {
-    errors.push('birthDate is required (format: YYYY-MM-DD)');
-  } else if (!/^\d{4}-\d{2}-\d{2}$/.test(body.birthDate)) {
-    errors.push('birthDate must be in YYYY-MM-DD format');
-  } else {
-    const date = new Date(body.birthDate);
-    if (isNaN(date.getTime())) {
-      errors.push('birthDate is not a valid date');
-    }
-  }
-
-  const lifeExpectancy = body.lifeExpectancy || 80;
-  if (typeof lifeExpectancy !== 'number' || lifeExpectancy < 1 || lifeExpectancy > 150) {
-    errors.push('lifeExpectancy must be a number between 1 and 150');
-  }
-
   if (body.theme && !THEMES[body.theme]) {
     errors.push('theme must be either "dark" or "light"');
-  }
-
-  // Check if birthDate is in the future
-  if (body.birthDate) {
-    const birth = new Date(body.birthDate);
-    const today = new Date();
-    if (birth > today) {
-      errors.push('birthDate cannot be in the future');
-    }
   }
 
   return errors;
 }
 
 /**
- * Calculate weeks between two dates
+ * Calculate current week of the year (0-51)
  */
-function calculateWeeksLived(birthDate, currentDate) {
-  const birth = new Date(birthDate);
-  const current = new Date(currentDate);
+function getCurrentWeekOfYear() {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
   const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-  return Math.floor((current - birth) / msPerWeek);
+  const weekNumber = Math.floor((now - startOfYear) / msPerWeek);
+  return Math.min(weekNumber, 51); // Cap at 51 (0-indexed, 52 weeks total)
 }
 
 /**
- * Generate the life calendar image
+ * Generate the year calendar image
  */
-function generateCalendarImage(birthDate, currentDate, lifeExpectancy, themeName) {
+function generateCalendarImage(themeName) {
   const theme = THEMES[themeName] || THEMES.dark;
   const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
   const ctx = canvas.getContext('2d');
@@ -115,82 +91,64 @@ function generateCalendarImage(birthDate, currentDate, lifeExpectancy, themeName
   ctx.fillStyle = theme.background;
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-  // Grid configuration
-  const weeksPerYear = 52;
-  const totalYears = lifeExpectancy;
-  const totalWeeks = totalYears * weeksPerYear;
-  const weeksLived = calculateWeeksLived(birthDate, currentDate);
+  // Grid configuration - 52 weeks in a 13×4 grid
+  const totalWeeks = 52;
+  const weeksPerRow = 13;
+  const rows = 4;
+  const currentWeek = getCurrentWeekOfYear();
+  const currentYear = new Date().getFullYear();
 
-  console.log(`Weeks lived: ${weeksLived}, Total weeks: ${totalWeeks}, Age: ${Math.floor(weeksLived / 52)} years`);
+  console.log(`Current week: ${currentWeek + 1}/52, Year: ${currentYear}`);
 
   // Calculate dot size and spacing to fit the grid
-  const headerHeight = 300;
+  const headerHeight = 200;
   const safeAreaTop = 250;
-  const marginBottom = 100;
-  const marginLeft = 80;
+  const marginBottom = 150;
+  const marginLeft = 50;
   const marginRight = 50;
-  const yearLabelWidth = 40;
 
-  const availableWidth = CANVAS_WIDTH - marginLeft - marginRight - yearLabelWidth;
+  const availableWidth = CANVAS_WIDTH - marginLeft - marginRight;
   const availableHeight = CANVAS_HEIGHT - headerHeight - safeAreaTop - marginBottom;
 
-  // Calculate optimal dot size and spacing (increased for better visibility)
-  const dotDiameter = 15;
-  const spacing = 6;
+  // Calculate optimal dot size and spacing (large dots for year view)
+  const dotDiameter = 50;
+  const spacing = 15;
   const cellSize = dotDiameter + spacing;
 
   // Calculate grid dimensions
-  const gridWidth = weeksPerYear * cellSize;
-  const gridHeight = totalYears * cellSize;
+  const gridWidth = weeksPerRow * cellSize;
+  const gridHeight = rows * cellSize;
 
   // Center the grid
-  const startX = marginLeft + yearLabelWidth + (availableWidth - gridWidth) / 2;
+  const startX = marginLeft + (availableWidth - gridWidth) / 2;
   const startY = safeAreaTop + headerHeight + (availableHeight - gridHeight) / 2;
 
-  // Draw header labels
-  ctx.fillStyle = theme.textSecondary;
-  ctx.font = '10px sans-serif';
+  // Draw year label at top
+  ctx.fillStyle = theme.text;
+  ctx.font = 'bold 48px sans-serif';
   ctx.textAlign = 'center';
+  ctx.fillText(currentYear.toString(), CANVAS_WIDTH / 2, safeAreaTop + 80);
 
-  // "WEEK OF THE YEAR" vertical label on left side
-  ctx.save();
+  // Draw week count
+  ctx.font = '24px sans-serif';
   ctx.fillStyle = theme.textSecondary;
-  ctx.font = '10px sans-serif';
-  ctx.translate(30, safeAreaTop + headerHeight + gridHeight / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.textAlign = 'center';
-  ctx.fillText('WEEK OF THE YEAR', 0, 0);
-  ctx.restore();
+  ctx.fillText(`Week ${currentWeek + 1} of 52`, CANVAS_WIDTH / 2, safeAreaTop + 140);
 
-  // Week numbers along top (every 10 weeks)
-  ctx.fillStyle = theme.textSecondary;
-  ctx.font = '8px sans-serif';
-  ctx.textAlign = 'center';
-  for (let w = 0; w <= weeksPerYear; w += 10) {
-    const x = startX + w * cellSize;
-    ctx.fillText(w.toString(), x, startY - 15);
-  }
+  // Draw the grid of weeks (13×4 grid)
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < weeksPerRow; col++) {
+      const weekIndex = row * weeksPerRow + col;
+      if (weekIndex >= totalWeeks) continue; // Skip if beyond 52 weeks
 
-  // Year markers on left axis
-  ctx.textAlign = 'right';
-  for (let y = 0; y <= totalYears; y += 10) {
-    const yPos = startY + y * cellSize + dotDiameter / 2;
-    ctx.fillText(y.toString(), startX - 15, yPos + 3);
-  }
-
-  // Draw the grid of weeks
-  for (let year = 0; year < totalYears; year++) {
-    for (let week = 0; week < weeksPerYear; week++) {
-      const weekIndex = year * weeksPerYear + week;
-      const x = startX + week * cellSize + dotDiameter / 2;
-      const y = startY + year * cellSize + dotDiameter / 2;
+      const x = startX + col * cellSize + dotDiameter / 2;
+      const y = startY + row * cellSize + dotDiameter / 2;
 
       // Determine dot color
       let color;
-      if (weekIndex === weeksLived) {
+      if (weekIndex === currentWeek) {
         color = theme.current; // Current week
-      } else if (weekIndex < weeksLived) {
-        color = theme.lived; // Lived weeks
+      } else if (weekIndex < currentWeek) {
+        color = theme.lived; // Completed weeks
       } else {
         color = theme.future; // Future weeks
       }
@@ -204,34 +162,34 @@ function generateCalendarImage(birthDate, currentDate, lifeExpectancy, themeName
   }
 
   // Draw legend at bottom
-  const legendY = CANVAS_HEIGHT - 60;
-  const legendStartX = CANVAS_WIDTH / 2 - 150;
+  const legendY = CANVAS_HEIGHT - 80;
+  const legendStartX = CANVAS_WIDTH / 2 - 180;
 
-  // Lived dot
+  // Completed dot
   ctx.beginPath();
-  ctx.arc(legendStartX, legendY, 4, 0, Math.PI * 2);
+  ctx.arc(legendStartX, legendY, 8, 0, Math.PI * 2);
   ctx.fillStyle = theme.lived;
   ctx.fill();
   ctx.fillStyle = theme.textSecondary;
-  ctx.font = '10px sans-serif';
+  ctx.font = '18px sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('Lived', legendStartX + 12, legendY + 4);
+  ctx.fillText('Completed', legendStartX + 20, legendY + 6);
 
   // Current dot
   ctx.beginPath();
-  ctx.arc(legendStartX + 80, legendY, 4, 0, Math.PI * 2);
+  ctx.arc(legendStartX + 140, legendY, 8, 0, Math.PI * 2);
   ctx.fillStyle = theme.current;
   ctx.fill();
   ctx.fillStyle = theme.textSecondary;
-  ctx.fillText('Now', legendStartX + 92, legendY + 4);
+  ctx.fillText('This Week', legendStartX + 160, legendY + 6);
 
-  // Future dot
+  // Remaining dot
   ctx.beginPath();
-  ctx.arc(legendStartX + 150, legendY, 4, 0, Math.PI * 2);
+  ctx.arc(legendStartX + 290, legendY, 8, 0, Math.PI * 2);
   ctx.fillStyle = theme.future;
   ctx.fill();
   ctx.fillStyle = theme.textSecondary;
-  ctx.fillText('Future', legendStartX + 162, legendY + 4);
+  ctx.fillText('Remaining', legendStartX + 310, legendY + 6);
 
   return canvas.toBuffer('image/png');
 }
@@ -278,7 +236,7 @@ app.get('/', (req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Life Calendar API</title>
+  <title>Year Calendar API</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -349,8 +307,8 @@ app.get('/', (req, res) => {
 </head>
 <body>
   <div class="container">
-    <h1>Life Calendar API</h1>
-    <p class="subtitle">Generate life calendar images showing your entire life as a grid of weeks</p>
+    <h1>Year Calendar API</h1>
+    <p class="subtitle">Generate year calendar images showing weeks completed in the current year (out of 52)</p>
     <span class="status">Service Online</span>
 
     <div class="section">
@@ -359,19 +317,9 @@ app.get('/', (req, res) => {
       <div class="endpoint">
         <span class="method post">POST</span>
         <span class="path">/api/generate-calendar</span>
-        <p class="description">Generate a life calendar PNG image</p>
+        <p class="description">Generate a year calendar PNG image for the current year</p>
 
         <div class="params">
-          <div class="param">
-            <span class="param-name">birthDate</span>
-            <span class="param-type">string</span>
-            <span class="param-desc">Your birth date (YYYY-MM-DD) <span class="required">required</span></span>
-          </div>
-          <div class="param">
-            <span class="param-name">lifeExpectancy</span>
-            <span class="param-type">number</span>
-            <span class="param-desc">Expected lifespan in years (default: 80)</span>
-          </div>
           <div class="param">
             <span class="param-name">theme</span>
             <span class="param-type">string</span>
@@ -381,7 +329,7 @@ app.get('/', (req, res) => {
 
         <pre><code>curl -X POST ${req.protocol}://${req.get('host')}/api/generate-calendar \\
   -H "Content-Type: application/json" \\
-  -d '{"birthDate":"1990-05-15","lifeExpectancy":80,"theme":"dark"}' \\
+  -d '{"theme":"dark"}' \\
   --output calendar.png</code></pre>
       </div>
 
@@ -395,6 +343,7 @@ app.get('/', (req, res) => {
     <div class="section">
       <h2>Response</h2>
       <p style="color: #888;">Success: PNG image (1170x2532px, optimized for iPhone lock screen)</p>
+      <p style="color: #888; margin-top: 5px;">Shows current year with 52 weeks in a 13×4 grid</p>
       <p style="color: #888; margin-top: 5px;">Error: JSON with error message</p>
     </div>
   </div>
@@ -413,20 +362,12 @@ app.post('/api/generate-calendar', (req, res) => {
       return res.status(400).json({ error: errors.join('; ') });
     }
 
-    const {
-      birthDate,
-      lifeExpectancy = 80,
-      theme = 'dark',
-    } = req.body;
+    const { theme = 'dark' } = req.body;
 
-    // Use current date automatically
-    const today = new Date();
-    const currentDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-
-    console.log(`Generating calendar: birthDate=${birthDate}, currentDate=${currentDate}, lifeExpectancy=${lifeExpectancy}, theme=${theme}`);
+    console.log(`Generating year calendar: theme=${theme}`);
 
     // Generate the image
-    const imageBuffer = generateCalendarImage(birthDate, currentDate, lifeExpectancy, theme);
+    const imageBuffer = generateCalendarImage(theme);
 
     console.log(`Generated image buffer: ${imageBuffer.length} bytes`);
 
@@ -457,7 +398,7 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Life Calendar API running on port ${PORT}`);
+  console.log(`Year Calendar API running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/`);
   console.log(`Generate calendar: POST http://localhost:${PORT}/api/generate-calendar`);
 });

@@ -1,14 +1,15 @@
-# Life Calendar API
+# Year Calendar API
 
-A Node.js web service that generates "life calendar" images showing your entire life as a grid of weeks. Each dot represents one week of your life - perfect for iPhone lock screen wallpapers.
+A Node.js web service that generates "year calendar" images showing weeks completed in the current year out of 52 total weeks - perfect for iPhone lock screen wallpapers.
 
 ## Features
 
-- Generate life calendar PNG images (1170x2532px - iPhone 14 Pro lock screen size)
+- Generate year calendar PNG images (1170x2532px - iPhone lock screen size)
 - Dark and light themes
-- Visualize weeks lived vs remaining
+- Visualize weeks completed vs remaining in current year
 - Current week highlighting
 - Optimized for iOS Shortcuts integration
+- Runs weekly on Monday at 2:00 AM
 
 ## Deploy to Railway
 
@@ -55,17 +56,15 @@ Health check and API documentation page.
 
 #### `POST /api/generate-calendar`
 
-Generate a life calendar PNG image.
+Generate a year calendar PNG image for the current year.
 
 **Request Body (JSON):**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `birthDate` | string | Yes | Your birth date (YYYY-MM-DD) |
-| `lifeExpectancy` | number | No | Expected lifespan in years (default: 80) |
 | `theme` | string | No | "dark" or "light" (default: "dark") |
 
-**Note:** The current date is automatically set to today's date by the API.
+**Note:** The API automatically generates the calendar for the current year showing completed weeks.
 
 **Response:**
 
@@ -80,21 +79,13 @@ Generate a life calendar PNG image.
 # Generate dark theme calendar
 curl -X POST https://your-app.up.railway.app/api/generate-calendar \
   -H "Content-Type: application/json" \
-  -d '{
-    "birthDate": "1990-05-15",
-    "lifeExpectancy": 80,
-    "theme": "dark"
-  }' \
+  -d '{"theme":"dark"}' \
   --output calendar.png
 
 # Generate light theme calendar
 curl -X POST https://your-app.up.railway.app/api/generate-calendar \
   -H "Content-Type: application/json" \
-  -d '{
-    "birthDate": "1985-12-01",
-    "lifeExpectancy": 90,
-    "theme": "light"
-  }' \
+  -d '{"theme":"light"}' \
   --output calendar-light.png
 ```
 
@@ -107,8 +98,6 @@ const response = await fetch('https://your-app.up.railway.app/api/generate-calen
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
-    birthDate: '1990-05-15',
-    lifeExpectancy: 80,
     theme: 'dark',
   }),
 });
@@ -118,12 +107,12 @@ const imageBlob = await response.blob();
 
 ## iOS Shortcut Integration
 
-Create an iOS Shortcut to automatically generate and set your life calendar as your lock screen wallpaper.
+Create an iOS Shortcut to automatically generate and set your year calendar as your lock screen wallpaper weekly.
 
 ### Setup Steps
 
 1. **Get Your Railway URL**
-   - After deploying, copy your Railway URL (e.g., `https://lifecalendar.up.railway.app`)
+   - After deploying, copy your Railway URL (e.g., `https://yearcal.up.railway.app`)
 
 2. **Create New Shortcut**
    - Open the Shortcuts app on your iPhone
@@ -134,8 +123,6 @@ Create an iOS Shortcut to automatically generate and set your life calendar as y
    **Action 1: Create JSON Dictionary**
    - Add "Dictionary" action
    - Add keys:
-     - `birthDate`: Your birth date (e.g., "1990-05-15")
-     - `lifeExpectancy`: 80 (or your preference)
      - `theme`: "dark" or "light"
 
    **Action 2: Get Contents of URL**
@@ -154,18 +141,16 @@ Create an iOS Shortcut to automatically generate and set your life calendar as y
    - Photo: Saved photo
    - Screen: Lock Screen
 
-4. **Automate (Optional)**
+4. **Automate**
    - Go to Automation tab
    - Create "Time of Day" automation
    - Set to run weekly on Monday at 2:00 AM
-   - Run your Life Calendar shortcut
+   - Run your Year Calendar shortcut
 
 ### Example Shortcut Flow
 
 ```
 1. Dictionary:
-   - birthDate: "1990-05-15"
-   - lifeExpectancy: 80
    - theme: "dark"
 2. Get Contents of URL
    - URL: https://your-app.up.railway.app/api/generate-calendar
@@ -176,7 +161,7 @@ Create an iOS Shortcut to automatically generate and set your life calendar as y
 4. Set Wallpaper (Lock Screen)
 ```
 
-The API automatically uses today's date, so you don't need to format or pass the current date.
+The API automatically generates the calendar for the current year, so you don't need to pass any date parameters.
 
 ## Local Development
 
@@ -201,8 +186,8 @@ sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev l
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/life-calendar-api.git
-cd life-calendar-api
+git clone https://github.com/yourusername/year-calendar-api.git
+cd year-calendar-api
 
 # Install dependencies
 npm install
@@ -218,7 +203,7 @@ The server will start at `http://localhost:3000`
 ```bash
 curl -X POST http://localhost:3000/api/generate-calendar \
   -H "Content-Type: application/json" \
-  -d '{"birthDate":"1990-05-15","lifeExpectancy":80,"theme":"dark"}' \
+  -d '{"theme":"dark"}' \
   --output test-calendar.png
 ```
 
@@ -228,23 +213,23 @@ The API is rate limited to 100 requests per 15 minutes per IP address to prevent
 
 ## Image Specifications
 
-- **Dimensions:** 1170 x 2532 pixels (iPhone 14 Pro lock screen)
+- **Dimensions:** 1170 x 2532 pixels (iPhone lock screen)
 - **Format:** PNG
-- **Grid:** 52 columns (weeks) × lifeExpectancy rows (years)
-- **Dot size:** 8px diameter
-- **Safe area:** 250px top margin for iPhone clock
+- **Grid:** 13 columns × 4 rows (52 weeks total)
+- **Dot size:** 50px diameter
+- **Layout:** Current year with completed weeks highlighted
 
 ### Theme Colors
 
 **Dark Theme:**
 - Background: #000000
-- Lived weeks: #FFFFFF
+- Completed weeks: #FFFFFF
 - Future weeks: #333333
 - Current week: #FF0000
 
 **Light Theme:**
 - Background: #FFFFFF
-- Lived weeks: #000000
+- Completed weeks: #000000
 - Future weeks: #CCCCCC
 - Current week: #00A8FF
 

@@ -1,7 +1,7 @@
 {
-  "name": "life-calendar-api",
-  "version": "1.0.0",
-  "description": "Generate life calendar images showing your entire life as a grid of weeks",
+  "name": "year-calendar-api",
+  "version": "2.0.0",
+  "description": "Generate year calendar images showing weeks completed in the current year",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -19,7 +19,7 @@
     "morgan": "^1.10.0"
   },
   "keywords": [
-    "life-calendar",
+    "year-calendar",
     "canvas",
     "image-generation",
     "railway"
