@@ -135,8 +135,8 @@ function generateCalendarImage(birthDate, currentDate, lifeExpectancy, themeName
   const availableHeight = CANVAS_HEIGHT - headerHeight - safeAreaTop - marginBottom;
 
   // Calculate optimal dot size and spacing (increased for better visibility)
-  const dotDiameter = 13;
-  const spacing = 5;
+  const dotDiameter = 15;
+  const spacing = 6;
   const cellSize = dotDiameter + spacing;
 
   // Calculate grid dimensions
@@ -151,14 +151,6 @@ function generateCalendarImage(birthDate, currentDate, lifeExpectancy, themeName
   ctx.fillStyle = theme.textSecondary;
   ctx.font = '10px sans-serif';
   ctx.textAlign = 'center';
-
-  // "LIFE CALENDAR" label at top right
-  ctx.save();
-  ctx.fillStyle = theme.text;
-  ctx.font = '12px sans-serif';
-  ctx.textAlign = 'right';
-  ctx.fillText('LIFE CALENDAR', CANVAS_WIDTH - 50, safeAreaTop + 30);
-  ctx.restore();
 
   // "WEEK OF THE YEAR" vertical label on left side
   ctx.save();
