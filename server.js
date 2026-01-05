@@ -134,9 +134,9 @@ function generateCalendarImage(birthDate, currentDate, lifeExpectancy, themeName
   const availableWidth = CANVAS_WIDTH - marginLeft - marginRight - yearLabelWidth;
   const availableHeight = CANVAS_HEIGHT - headerHeight - safeAreaTop - marginBottom;
 
-  // Calculate optimal dot size and spacing
-  const dotDiameter = 8;
-  const spacing = 3;
+  // Calculate optimal dot size and spacing (increased by 1.25x)
+  const dotDiameter = 10;
+  const spacing = 4;
   const cellSize = dotDiameter + spacing;
 
   // Calculate grid dimensions
