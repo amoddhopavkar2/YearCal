@@ -108,6 +108,9 @@ function generateCalendarImage(birthDate, currentDate, lifeExpectancy, themeName
   const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
   const ctx = canvas.getContext('2d');
 
+  console.log(`Canvas created: ${CANVAS_WIDTH}x${CANVAS_HEIGHT}`);
+  console.log(`Theme: ${themeName}`, theme);
+
   // Fill background
   ctx.fillStyle = theme.background;
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -117,6 +120,8 @@ function generateCalendarImage(birthDate, currentDate, lifeExpectancy, themeName
   const totalYears = lifeExpectancy;
   const totalWeeks = totalYears * weeksPerYear;
   const weeksLived = calculateWeeksLived(birthDate, currentDate);
+
+  console.log(`Weeks lived: ${weeksLived}, Total weeks: ${totalWeeks}, Age: ${Math.floor(weeksLived / 52)} years`);
 
   // Calculate dot size and spacing to fit the grid
   const headerHeight = 300;
@@ -412,8 +417,12 @@ app.post('/api/generate-calendar', (req, res) => {
     const today = new Date();
     const currentDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
+    console.log(`Generating calendar: birthDate=${birthDate}, currentDate=${currentDate}, lifeExpectancy=${lifeExpectancy}, theme=${theme}`);
+
     // Generate the image
     const imageBuffer = generateCalendarImage(birthDate, currentDate, lifeExpectancy, theme);
+
+    console.log(`Generated image buffer: ${imageBuffer.length} bytes`);
 
     // Set response headers
     res.set({
